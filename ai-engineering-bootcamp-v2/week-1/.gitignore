@@ -1,6 +1,6 @@
 # Environment — never commit real keys
 .env
-
+submissions/**
 # Python
 __pycache__/
 *.py[cod]

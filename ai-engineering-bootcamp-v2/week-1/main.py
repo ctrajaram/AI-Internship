@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 from pydantic import BaseModel, Field, ValidationError
 
 # Load .env from this folder so the key is found regardless of shell working directory.
@@ -40,7 +40,9 @@ class AskRequest(BaseModel):
 
     question: str
     force_bad: bool = False  # Stage 3 demo knob — first attempt breaks schema on purpose.
-    model: str | None = None  # Stage 4 — optional override to swap models live.
+    # Stage 4 — optional override to swap models live. The example keeps the docs
+    # from prefilling "string", which would reach the API as a real model name.
+    model: str | None = Field(default=None, examples=["gpt-4o-mini"])
 
 
 class AskResponse(BaseModel):
@@ -148,6 +150,12 @@ def ask(body: AskRequest) -> AskResponse:
                 latency_ms=latency_ms,
                 cost_usd=round(cost_usd, 6),
             )
+        except OpenAIError as exc:
+            # Upstream refused the call (bad model name, auth, rate limit) — retrying
+            # the same request will not help, so fail loudly instead of silently.
+            raise HTTPException(
+                status_code=502, detail=f"Model call failed for {model!r}: {exc}"
+            ) from exc
         except (ValidationError, ValueError) as exc:
             last_error = str(exc)
             continue
