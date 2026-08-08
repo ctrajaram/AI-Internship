@@ -1,0 +1,21 @@
+/*
+  CODE FLOW:
+  1. main.tsx imports this file, so Vite processes it before the app renders.
+  2. The single @import line pulls in all of Tailwind.
+  3. The Tailwind Vite plugin scans our .tsx files, sees which utility classes we actually
+     used, and generates CSS for only those. Unused styles never reach the browser.
+
+  NOTE: this one line is the entire Tailwind v4 setup. There is no tailwind.config.js and no
+  postcss.config.js — those were required in v3 (the version used by
+  ai-engineering-bootcamp/agentic-memory/demo-ui). Don't copy that project's config here.
+*/
+
+@import "tailwindcss";
+
+/*
+  TAKEAWAYS:
+  1. Tailwind gives you small single-purpose classes ("p-4" = padding, "flex" = display flex)
+     that you combine in your JSX, instead of writing CSS rules in a separate file.
+  2. Because the plugin only emits classes you used, the CSS file stays small automatically.
+  3. You can still write plain CSS below this line whenever a utility class isn't a good fit.
+*/

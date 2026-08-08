@@ -1,0 +1,14 @@
+# Dependencies (a junction to C:\nodemods\week1-frontend on this machine)
+node_modules
+
+# Build output
+dist
+
+# Emitted by `tsc -b` because tsconfig.node.json sets "composite": true.
+# Regenerated on every build, so they do not belong in git.
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Logs
+*.log

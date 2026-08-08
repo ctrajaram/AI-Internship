@@ -1,0 +1,26 @@
+<!doctype html>
+<!--
+  CODE FLOW:
+  1. The browser loads this file first — it is the only real HTML page in the app.
+  2. It contains one empty <div id="root"></div>. That is where React will draw everything.
+  3. The <script> tag loads src/main.tsx, which finds that div and renders <App /> into it.
+  4. From then on, every visible element is created by React, not by this file.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 1 — /ask</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+<!--
+  TAKEAWAYS:
+  1. A React app is a "single page app" — this one HTML file is the whole page.
+  2. The empty div is a mounting point; React fills it in at runtime.
+  3. type="module" lets the browser use modern import syntax, which Vite relies on.
+-->
