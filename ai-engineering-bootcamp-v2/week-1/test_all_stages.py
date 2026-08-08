@@ -22,7 +22,11 @@ def free_port() -> int:
 def start_server(module: str, port: int) -> subprocess.Popen:
     return subprocess.Popen(
         [
-            str(WORKDIR / ".venv/bin/uvicorn"),
+            # Reuse the interpreter running this script so the venv layout
+            # (bin/ on POSIX, Scripts/ on Windows) never has to be hardcoded.
+            sys.executable,
+            "-m",
+            "uvicorn",
             f"{module}:app",
             "--host",
             "127.0.0.1",
