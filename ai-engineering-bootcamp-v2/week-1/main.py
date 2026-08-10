@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from openai import OpenAI, OpenAIError
+from openai import AsyncOpenAI, OpenAIError
 from pydantic import BaseModel, Field, ValidationError
 
 # Load .env from this folder so the key is found regardless of shell working directory.
@@ -14,7 +14,13 @@ load_dotenv(_ENV_PATH)
 
 # Reuse one client so TLS handshakes are not repeated on every request.
 app = FastAPI()
-client = OpenAI()  # Reads OPENAI_API_KEY from the environment; never hardcode keys.
+
+# Async client, paired with `async def` endpoints below. FastAPI runs a plain `def` endpoint
+# in a bounded worker thread pool, so every in-flight request holds a thread for the whole
+# 1-3 second OpenAI call and concurrency is capped by that pool. An `async def` endpoint
+# awaiting an async client holds no thread while waiting on the network, so one process can
+# serve many simultaneous requests.
+client = AsyncOpenAI()  # Reads OPENAI_API_KEY from the environment; never hardcode keys.
 
 # Stage 4 default — strong general model; swap at request time for the live demo.
 DEFAULT_MODEL = "gpt-4o"
@@ -63,13 +69,13 @@ def compute_cost_usd(model: str, prompt_tokens: int, completion_tokens: int) -> 
     return (prompt_tokens / 1000 * input_per_1k) + (completion_tokens / 1000 * output_per_1k)
 
 
-def call_model_structured(question: str, model: str) -> tuple[Answer, int, int, int]:
+async def call_model_structured(question: str, model: str) -> tuple[Answer, int, int, int]:
     """
     Stage 2 center: OpenAI structured output forces exactly the Answer schema.
     Returns parsed answer plus token counts from billing metadata.
     """
 
-    completion = client.chat.completions.parse(
+    completion = await client.chat.completions.parse(
         model=model,
         messages=[{"role": "user", "content": question}],
         response_format=Answer,
@@ -86,13 +92,13 @@ def call_model_structured(question: str, model: str) -> tuple[Answer, int, int, 
     return parsed, total, prompt_tokens, completion_tokens
 
 
-def call_model_unsafe(question: str, model: str) -> tuple[Answer, int, int, int]:
+async def call_model_unsafe(question: str, model: str) -> tuple[Answer, int, int, int]:
     """
     Stage 3 demo path: free-form JSON call, then validate locally.
     The bad instruction makes confidence a string so Pydantic rejects it reliably.
     """
 
-    completion = client.chat.completions.create(
+    completion = await client.chat.completions.create(
         model=model,
         messages=[
             {
@@ -118,7 +124,7 @@ def call_model_unsafe(question: str, model: str) -> tuple[Answer, int, int, int]
 
 
 @app.post("/ask")
-def ask(body: AskRequest) -> AskResponse:
+async def ask(body: AskRequest) -> AskResponse:
     """Answer one question with structured output, guardrails, and cost visibility."""
 
     model = body.model or DEFAULT_MODEL
@@ -132,11 +138,11 @@ def ask(body: AskRequest) -> AskResponse:
             # First attempt with force_bad uses the unsafe path; retry uses structured output.
             use_bad_path = body.force_bad and attempt == 0
             if use_bad_path:
-                answer, tokens_used, prompt_tokens, completion_tokens = call_model_unsafe(
+                answer, tokens_used, prompt_tokens, completion_tokens = await call_model_unsafe(
                     body.question, model
                 )
             else:
-                answer, tokens_used, prompt_tokens, completion_tokens = call_model_structured(
+                answer, tokens_used, prompt_tokens, completion_tokens = await call_model_structured(
                     body.question, model
                 )
 
