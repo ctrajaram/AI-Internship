@@ -1,0 +1,19 @@
+Northwind Robotics Information Security Policy
+Author: IT Security Team
+Document ID: SEC-204
+
+Passwords must be at least 14 characters and are rotated every 180 days.
+Password reuse is blocked for the previous 10 passwords. Shared accounts
+are prohibited without a documented exception approved by the CISO.
+
+Multi-factor authentication is mandatory for all staff. Hardware security
+keys are issued to engineering and finance. SMS codes are not an accepted
+second factor.
+
+Laptops must have full-disk encryption enabled before leaving the office.
+Lost or stolen devices must be reported to the IT Security Team within
+four hours of discovery.
+
+Customer data may not be copied to personal devices or personal cloud
+storage. Production database access requires a ticket and is granted for
+a maximum of eight hours at a time.

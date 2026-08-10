@@ -1,0 +1,8 @@
+fastapi[standard]
+httpx
+openai
+python-dotenv
+streamlit
+# Week 2 — RAG additions
+pinecone
+langchain-text-splitters
